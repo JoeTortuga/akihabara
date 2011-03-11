@@ -1654,6 +1654,17 @@ var gbox={
 	setShowPlayers:function(m) { gbox._showplayers=m},
 	setAudioCompatMode:function(m) { gbox._audiocompatmode=m },
 	setAudioCreateMode:function(m) { gbox._createmode=m },
+  /**
+  * Adds an audio file to the loader, assigning it to an ID. If adding  a sound to an existing ID, it checks to see if the file you're
+  * adding is different than the one currently assigned to the ID. If it's different, it overwrites the old sound. If it's the same, then
+  * no action is taken.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} id The identifier of the sound.
+  * @param {Array} filename Array of filenames to load. Multiple sound files allow for more browser compatibility (eg .mp3 and .ogg).
+  * @param {Object}def (Optional) Channel and looping for the audio contained in def.channel and def.loop paremeters 
+  */
 	addAudio:function(id,filename,def) {
 		if (gbox._canaudio) {
 			if (gbox._audio.aud[id])
@@ -1668,6 +1679,10 @@ var gbox={
 			}
 		}
 	},
+  /**
+  * Deletes a sound currently in use. Does not delete the audio file, but removes it from Akihabara's sound list.
+  * @param {String} id The identifier of the sound.
+  */
 	deleteAudio:function(id) {
 		if (gbox._audio.aud[id]) {
 			for (var i=0;i<gbox._audio.aud[id].length;i++) {
@@ -1678,10 +1693,26 @@ var gbox={
 			if (gbox._audio.ast[id]) delete gbox._audio.ast[id];
 		}
 	},
+	/**
+  * Plays a sound, if it is not already playing.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @param {Object} data (Optional) The data object can be used to set audio paremters, such as channel, volume, or looping. (This is probably better done when the audio is added.)
+  */
 	playAudio:function(a,data) {
 		if (this._canaudio&&this._audio.ast[a])
 			if (!this._audio.ast[a].play) this.hitAudio(a,data);
 	},
+	/**
+  * Plays a sound.  If the sound is already playing, it stops it, and starts over from the beginning.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @param {Object} data (Optional) The data object can be used to set audio paremters, such as channel, volume, or looping. (This is probably better done when the audio is added.)
+  */
 	hitAudio:function(a,data) {
 		if (this._canaudio&&this._audio.ast[a]) {
 			var ael;
@@ -1695,6 +1726,14 @@ var gbox={
 			this._addqueue({t:0,a:ael});
 		}
 	},
+	/**
+  * Stops a sound if it is playing, otherwise it does nothing.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @param {Boolean} permissive (Optional) Not used.
+  */
 	stopAudio:function(a,permissive) {
 		if (this._canaudio) {
 			var ael;
@@ -1706,7 +1745,13 @@ var gbox={
 			}
 		}
 	},
-	setSplashSettings:function(a) { for (var n in a) this._splash[n]=a[n]; },
+	/**
+  * Resets an audio channel's volume back to the default volume.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel. Pass in "master" to reset all audio channels to their default.
+  */
 	resetChannel:function(ch) {
 		if (this._canaudio&&this._audiochannels[ch])
 			if (ch=="master")
@@ -1715,9 +1760,25 @@ var gbox={
 			else if (this._audiochannels[ch])
 				this.setChannelVolume(ch,this._audiochannels[ch]._def.volume);
 	},
+	/**
+  * Returns the default volume of channel ch.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel. 
+  * @returns {Real} The default volume of the channel (between 0.0 and 1.0, inclusive), or null if ch is not a channel.
+  */
 	getChannelDefaultVolume:function(ch) {
 		if (this._canaudio&&this._audiochannels[ch]) return this._audiochannels[ch]._def.volume; else return null;
 	},
+	/**
+  * Sets audio channel ch's volume to a
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel. Pass in "master" to set the master sound volume.
+  * @param {Real} a The volume to set the audio to as a number between 0.0 and 1.0 inclusive
+  */
 	setChannelVolume:function(ch,a) {
 		if (this._canaudio&&this._audiochannels[ch]) {
 			if (ch=="master") this._audiomastervolume=a; else this._audiochannels[ch].volume=a
@@ -1725,7 +1786,24 @@ var gbox={
 				if (this._audio.ast[j].cy>-1) this._updateaudio(j);
 		}
 	},
+	/**
+  * Returns the current volume of channel ch.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel.  Pass in "Master" to retrieve the audio master volume instead.
+  * @returns {Real} The default volume of the channel (between 0.0 and 1.0, inclusive), or 0 if ch is not a channel.
+  */
 	getChannelVolume:function(ch) { if (ch=="master") return this._audiomastervolume; else if (this._audiochannels[ch]) return this._audiochannels[ch].volume; else return 0 },
+	
+	/**
+  * Increments the current volume of channel ch by a.  Will not lower the channel to a volume lower than 0.0 or raise it higher than 1.0
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel.
+  * @param {Real} a Amount to add to (or subtract from) the channel's volume.
+  */
 	changeChannelVolume:function(ch,a) {
 		if (this._canaudio&&this._audiochannels[ch]) {
 			var vol=this.getChannelVolume(ch)+a;
@@ -1733,28 +1811,119 @@ var gbox={
 			this.setChannelVolume(ch,vol);
 		}
 	},
+	/**
+  * Stops all sounds playing in channel ch
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} ch The identifier of the channel.
+  */
 	stopChannel:function(ch) {
 		if (this._canaudio)
 			for (var j in gbox._audio.aud)
 				if (this._audio.ast[j].cy>-1&&gbox._audio.ast[j].play&&((ch=="master")||(this._audio.ast[j].channel==ch)))
 					this.stopAudio(j);
 	},
-	
-	setAudioUnmute:function(a) { if (this._canaudio&&this._audio.ast[a]) { this._audio.ast[a].mute=false; this._updateaudio(a); } },
+	/**
+  * Unmutes a particular sound
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  */
+  setAudioUnmute:function(a) { if (this._canaudio&&this._audio.ast[a]) { this._audio.ast[a].mute=false; this._updateaudio(a); } },
+	/**
+  * Mutes a particular sound
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  */
 	setAudioMute:function(a) { if (this._canaudio&&this._audio.ast[a]) { this._audio.ast[a].mute=true; this._updateaudio(a); } },
+	/**
+  * Returns whether a sound is muted or not
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @returns {Boolean} True if the sound is muted, otherwise false.
+  */
 	getAudioMute:function(a) { if (this._canaudio&&this._audio.ast[a]) return this._audio.ast[a].mute; else return null},
-	
+	/**
+  * Sets the volume of a sound
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  */
 	setAudioVolume:function(a,vol) { if (this._canaudio&&this._audio.ast[a]) { this._audio.ast[a].volume=vol; this._updateaudio(a); } },
+	/**
+  * Returns the volume of a sound
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @returns {Real} The volume from 0.0-1.0 of the sound.
+  */
 	getAudioVolume:function(a,vol) { if (this._canaudio&&this._audio.ast[a]) return this._audio.ast[a].volume; else return null},
-	
+	/**
+  * Sets the position in time where an audio file will play
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @param {Real} p Time value of desired position, expressed in seconds
+  */
 	setAudioPosition:function(a,p) {  if (this._canaudio&&this._audio.ast[a]&&this._audio.aud[a][this._audio.ast[a].cy]) this._audio.aud[a][this._audio.ast[a].cy].currentTime=p;},
+	/**
+  * Returns the current position in time of an audio file
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @returns {Real} Time value of current position, expressed in seconds
+  */
 	getAudioPosition:function(a) {if (this._canaudio&&this._audio.ast[a]&&this._audio.aud[a][this._audio.ast[a].cy]) if (this._audio.aud[a][this._audio.ast[a].cy].currentTime>this._positiondelay) return this._audio.aud[a][this._audio.ast[a].cy].currentTime-this._positiondelay; else return 0; else return 0},
-
+	/**
+  * Returns the duration of an audio file
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @returns {Real} The duration of the audio file, expressed in seconds
+  */
 	getAudioDuration:function(a) {if (this._canaudio&&this._audio.ast[a]&&this._audio.aud[a][this._audio.ast[a].cy]) return this._audio.aud[a][this._audio.ast[a].cy].duration; else return 0},
-
+	/**
+  * Changes the volume of audio file a by the amount vol
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {String} a The identifier of the sound.
+  * @param {Real} vol Increment to change volume by -- final volume won't be more than 1.0 or less than 0.0
+  */
 	changeAudioVolume:function(a,vol) { if (this._canaudio&&this._audio.ast[a]) { if (this._audio.ast[a].volume+vol>1) this._audio.ast[a].volume=1; else  if (this._audio.ast[a].volume+vol<0) this._audio.ast[a].volume=0; else this._audio.ast[a].volume+=vol; this._updateaudio(a); } },
+	/**
+  * Set the availability of audio functions. Used by automatic browser and URL-based configuation.
+  *
+  * Like all audio functions,does nothing if audio is unavailable.
+  *
+  * @param {Boolean} a True to turn on audio, false to turn it off.
+  */
 	setCanAudio:function(a) { this._canaudio=!this._flags.noaudio&&a;},
+	/**
+  * Set the audio to only use a particular mime type for audio.  Used by automatic browser and URL-based configuation.
+  *
+  * @param {String} a The mime type to force the use of e.g. "mime/ogg"
+  */
 	setForcedMimeAudio:function(a){ this._forcedmimeaudio=a;},
+	/**
+  * Sets up the audio channels.  Audio channels are like groups for animation, putting similar types of audio files together, with similar default attributes.
+  *
+  * @param {Object} a Each sub object is an audio channel, with attributes which will be the default for that channel.
+  * @example
+  * // (from Capman)
+  * gbox.setAudioChannels({bgmusic:{volume:0.8},sfx:{volume:1.0}}); 
+  */
 	setAudioChannels:function(a){
 		this._audiochannels=a;
 		for (var ch in a) {
@@ -1763,9 +1932,26 @@ var gbox={
 				if (attr!="_def") this._audiochannels[ch]._def[attr]=this._audiochannels[ch][attr];
 		}
 	},
+	/**
+  * Sets up the audio team size.  An audio control is created for each member of the audioteam, which aids in playing multiple sounds and performance on some browsers.
+  * Used by automatic browser and URL-based configuration.
+  *
+  * @param {Integer} a Desired size of the audio team (defaults are 1-3, depending on browser).
+  */
 	setAudioTeam:function(a){ this._audioteam=a; },
+	/**
+  * Sets up the lower audio team size.  An audio control is created for each member of the audioteam, which aids in playing multiple sounds and performance on some browsers.
+  * Lower audio team is used for background channels, and is typically lower than audioteam. Used by automatic browser and URL-based configuration.
+  *
+  * @param {Integer} a Desired size of the lower audio team (rarely more than 1, depending on browser).
+  */
 	setLowerAudioTeam:function(a){ this._loweraudioteam=a; },
-	
+	// ---
+	// ---
+	// ---  SPLASH SCREEN 
+	// ---
+	// ---
+	setSplashSettings:function(a) { for (var n in a) this._splash[n]=a[n]; },
 	// ---
 	// ---
 	// ---  DYNAMIC SCRIPT INCLUSION
