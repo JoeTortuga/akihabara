@@ -1158,7 +1158,7 @@ var gbox={
   * <li>image {String}: reference to the tileset image loaded</li>
   * <li>tileh {Integer}: height in pixels of the tiles</li>
   * <li>tilew {Integer}: width in pixels of the tiles</li>
-  * <li>tilerow {Integer}: width in pixels of each row in the font image</li>
+  * <li>tilerow {Integer}: number of tiles per row</li>
   * <li>gapx {Integer}: x-coord gap between tile columns, in pixels</li>
   * <li>gapy {Integer}: y-coord gap between tile rows, in pixels</li></ul>
   */
@@ -1175,7 +1175,7 @@ var gbox={
   * <li>image {String}: reference to the tileset image loaded</li>
   * <li>tileh {Integer}: height in pixels of the tiles</li>
   * <li>tilew {Integer}: width in pixels of the tiles</li>
-  * <li>tilerow {Integer}: width in pixels of each row in the font image</li>
+  * <li>tilerow {Integer}: number of tiles per row</li>
   * <li>gapx {Integer}: x-coord gap between tile columns, in pixels</li>
   * <li>gapy {Integer}: y-coord gap between tile rows, in pixels</li></ul>
   */
@@ -1958,7 +1958,13 @@ var gbox={
 	// ---
 	// ---
 	
-	addScript:function(call) {
+	/**
+  * Adds a script to the autoloader. Whatever javascript contained in the referenced file gets
+  * appended to the <body> of the main page, allowing it to be called as appropriate
+  *
+  * @param {Object} call An object containing: <ul><li>file {String}: the relative path to the script resource file</li>
+  */  
+ 	addScript:function(call) {
 		gbox._addtoloader({type:"script",call:call});
 	},
 	
@@ -1968,10 +1974,45 @@ var gbox={
 	// ---
 	// ---
 	
-	addBundle:function(call){
+ /**
+  * Adds a bundle to the autoloader. Bundle files can contain any
+  * game information and data. The format should conform to the pack parameter for <b>readBundleData</b>.
+  *
+  * @param {Object} call An object containing: <ul><li>file {String}: the relative path to the bundle resource file</li>
+  * <li>onLoad {Function}: (Optional) a function to call once the bundle has been loaded</li></ul>
+	*/  
+  addBundle:function(call){
 		gbox._addtoloader({type:"bundle",call:call});
 	},
-	
+ /**
+  * Loads a bundle of data. Usually called by the autoloader, once a bundle added by <b>addBundle</b>
+  * has been loaded. The contained items can be in any order, but are evaluated in the order described here.
+  *
+  * @param {Object} pack An object containing one or more of the following: 
+  *	<dl>
+  *		<dt>setObject (Array):</dt>
+  *		<dd>An array of objects, where each object contains: <ul><li>object (String): the name of the javascript object whose property we're setting.</li>
+  *		<li>property (String): the name of the property we're setting</li><li>value (Any): the value we're assigning to the property.</li></ul>Ultimately setObject items create this statement: object.property=value</dd>
+  *		<dt>addFont (Array):</dt>
+  *		<dd>An array of fonts to add. Each item of the array is passed as an object to <b>addFont</b> and should match its specification.</dd>
+  *		<dt>addTiles (Array):</dt>
+  *		<dd>An array of tiles to add. Each item of the array is passed as an object to <b>addTiles</b> and should match its specification.</dd>
+  *		<dt>addImage (Array):</dt>
+  *		<dd>An array of images to add. Each item is an array of the two parameters of <b>addImage</b>, which is called for every item of the array.</dd>
+  *		<dt>addAudio (Array):</dt>
+  *		<dd>An array of tiles to add. Each item of the array is passed as an object to <b>addAudio</b> and should match its specification.</dd>
+  *		<dt>addBundle (Array):</dt>
+  *		<dd>An array of tiles to add. Each item of the array is passed as an object to <b>addBundle</b> and should match its specification.</dd>
+  *		<dt>addScript (Array):</dt>
+  *		<dd>An array of tiles to add. Each item of the array is passed as an object to <b>addScript</b> and should match its specification.</dd>
+  *		<dt>onLoad (Function):</dt>
+  *		<dd>Javascript function which is called when the pack is loaded, and before the onLoad of the call parameter.</dd>
+  *	</dl>
+  *@param{Object} call The original object passed to <b>addBundle</b>. readBundleData only uses its onLoad paramter, which is a Javascript function, and is optional.
+  *@example
+  * // (from TLoL)
+  *   Good examples of bundles can be found in the /resources/tlol and the TLoL game example
+	*/  
 	readBundleData:function(pack,call) {
 		// Local resources first
 		if (pack.setObject) for (var i=0;i<pack.setObject.length;i++) eval("("+pack.setObject[i].object+")")[pack.setObject[i].property]=pack.setObject[i].value;
